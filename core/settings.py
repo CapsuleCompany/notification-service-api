@@ -1,15 +1,18 @@
 from pathlib import Path
-from decouple import Config, RepositoryEnv
+from environs import Env
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-config = Config(RepositoryEnv('/app/.env'))
+# Initialize environs
+env = Env()
+env.read_env()
 
 # Security settings
-SECRET_KEY = config("DJANGO_SECRET")
-DEBUG = config("DJANGO_DEBUG", default=True, cast=bool)
-ALLOWED_HOSTS = config("DJANGO_ALLOWED_HOSTS", default="localhost").split(",")
+SECRET_KEY = env.str("DJANGO_SECRET")
+DEBUG = env.bool("DJANGO_DEBUG", default=True)
+# ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["localhost"])
+ALLOWED_HOSTS = ["*"]
 
 # Installed apps
 INSTALLED_APPS = [
@@ -36,14 +39,12 @@ ROOT_URLCONF = "core.urls"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("POSTGRES_DB", default="app_database"),
-        "USER": config("POSTGRES_USER", default="postgres"),
-        "PASSWORD": config("POSTGRES_PASSWORD", default="password"),
-        "HOST": config("POSTGRES_HOST", default="localhost"),
-        "PORT": config("POSTGRES_PORT", default="5432"),
-        "OPTIONS": {
-            "options": "-c search_path=notifications_api"
-        },
+        "NAME": env.str("POSTGRES_DB", default="app_database"),
+        "USER": env.str("POSTGRES_USER", default="postgres"),
+        "PASSWORD": env.str("POSTGRES_PASSWORD", default="password"),
+        "HOST": env.str("POSTGRES_HOST", default="localhost"),
+        "PORT": env.int("POSTGRES_PORT", default=5432),
+        "OPTIONS": {"options": "-c search_path=users_api"},
     }
 }
 
@@ -58,3 +59,6 @@ USE_TZ = True
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+KAFKA_TOPIC = env.str("KAFKA_TOPIC", default="default_topic")
+KAFKA_SERVERS = env.list("KAFKA_SERVERS", default=["kafka:9092"])
